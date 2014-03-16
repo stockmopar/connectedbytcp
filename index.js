@@ -17,61 +17,73 @@ function TCPConnected(host) {
 };
 
 TCPConnected.prototype.GetState = function (cb){
-	
 	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(GetStateString));
-
-	//console.log(payload);
-	
 	var opts = {
 	method:"POST",
 	body:payload,
 	headers:{
 	  'Content-Type':'text/xml; charset="utf-8"',
-	  //'SOAPACTION':'"urn:Belkin:service:basicevent:1#GetBinaryState"',
 	  'Content-Length':payload.length
 	},
 	uri:'http://'+this._host+'/gwr/gop.php',
 	};
 	
 	request(opts,function(e,r,b) {
-		//console.log(b);
-		
 		xml(b, function (error, result) {
 			Rooms = result['gwrcmd']['gdata']['gip']['room'];
-			// console.dir(Rooms);
 			if (error) {
-			return cb(error);
+				return cb(error);
 			}
 			try {
-			var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
-			} catch (err) {
-			var error = {error:'Unkown Error'}
+				var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
+				} catch (err) {
+				var error = {error:'Unkown Error'}
 			}
 			cb(error||null,Rooms);
 		});
 	});
 }
-
+TCPConnected.prototype.GetRoomStateByName = function (name, cb){
+	Rooms.forEach(function(room) { 
+		if(room["name"] == name){
+			state = 0;
+			var i = 0;
+			var sum = 0;
+			var devices = room["device"];
+			devices.forEach(function(device) { 
+				i = i+1;
+				if(device["state"] != "0"){
+					state = 1;
+					sum = sum + parseInt(device["level"]);
+				}
+			});
+			if(i == 0){
+				sum = 0;
+				i = 1;
+				state = 0;
+			}
+			level = sum / i;
+			cb(null,state,level);
+		}
+	});
+}
 TCPConnected.prototype.GetRIDByName = function (name){
 	var rid = 0;
-		
 	Rooms.forEach(function(room) { 
 		if(room["name"] == name){
 			rid = room["rid"];
-			console.log(room["rid"]);
 		}
 	});
 	
 	return rid;
 }
-TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
+
+TCPConnected.prototype.TurnOnRoomByName = function (name){
 	rid = this.GetRIDByName(name);
 	
 	var RoomCommand = util.format(RoomSendCommand,rid,1);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
-	
-	console.log(RoomCommand);
-	
+
 	var opts = {
 	method:"POST",
 	body:payload,
@@ -83,18 +95,16 @@ TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
 	};
 	
 	request(opts,function(e,r,b) {
-		console.log(b);
-		cb(1);
+		// Request Complete
 	});
 }
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
+	console.log("Turn Off Room");
 	rid = this.GetRIDByName(name);
 	
 	var RoomCommand = util.format(RoomSendCommand,rid,0);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
 	
-	console.log(RoomCommand);
-	
 	var opts = {
 	method:"POST",
 	body:payload,
@@ -106,16 +116,6 @@ TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
 	};
 	
 	request(opts,function(e,r,b) {
-		console.log(b);
-		cb(1);
+		// Request Complete
 	});
 }
-
-Test = new TCPConnected("192.168.1.137");
-
-Test.GetState(function(error,system){
-	//console.log(system);
-	Test.TurnOffRoomByName("Living Room", function(error){
-		console.log("Success");
-	});
-});
