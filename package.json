@@ -1,6 +1,6 @@
 {
   "name": "connectedbytcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": {
     "name": "stockmopar",
     "email": "git@stockmopar.com"
@@ -13,6 +13,6 @@
 	"events": "*"
   },
   "readmeFilename": "README.md",
-  "_id": "connectedbytcp@0.0.2",
+  "_id": "connectedbytcp@0.0.3",
   "description": "Connected by TCP client"
 }
