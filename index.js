@@ -32,6 +32,9 @@ TCPConnected.prototype.GetState = function (cb){
 	request(opts,function(e,r,b) {
 		xml(b, function (error, result) {
 			Rooms = result['gwrcmd']['gdata']['gip']['room'];
+			if (typeof(Rooms["rid"]) !== 'undefined'){
+				Rooms = [ Rooms ];
+			}
 			//console.log(Rooms);
 			if (error) {
 				return cb(error);
