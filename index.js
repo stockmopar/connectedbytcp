@@ -30,6 +30,7 @@ TCPConnected.prototype.GetState = function (cb){
 	};
 	
 	request(opts,function(e,r,b) {
+		console.log(b);
 		xml(b, function (error, result) {
 			// Need to add validation to make sure that Rooms is proper or else result error
 			console.log(Rooms);
