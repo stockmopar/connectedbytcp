@@ -29,12 +29,19 @@ TCPConnected.prototype.GetState = function (cb){
 	uri:'http://'+this._host+'/gwr/gop.php',
 	};
 	
+	startTime = new Date().getTime();
+	
 	request(opts,function(e,r,b) {
-		console.log(b);
+		//console.log(b);
+		
 		xml(b, function (error, result) {
 			// Need to add validation to make sure that Rooms is proper or else result error
-			console.log(result);
-			if(typeof(results["gip"]) !== 'undefined'){
+			//console.log(result);
+			
+			endTime = new Date().getTime();
+			timeForRequest = (endTime - startTime)/1000;
+			
+			if(typeof(result["gip"]) !== 'undefined'){
 				error = 1;
 			}else{
 				Rooms = result['gwrcmd']['gdata']['gip']['room'];
@@ -51,7 +58,7 @@ TCPConnected.prototype.GetState = function (cb){
 				} catch (err) {
 				var error = {error:'Unkown Error'}
 			}
-			cb(error||null,Rooms);
+			cb(error||null,Rooms,timeForRequest);
 		});
 	});
 }
@@ -118,7 +125,7 @@ TCPConnected.prototype.GetRIDByName = function (name){
 	return rid;
 }
 
-TCPConnected.prototype.TurnOnRoomByName = function (name){
+TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
 	rid = this.GetRIDByName(name);
 	
 	var RoomCommand = util.format(RoomSendCommand,rid,1);
@@ -134,12 +141,27 @@ TCPConnected.prototype.TurnOnRoomByName = function (name){
 	uri:'http://'+this._host+'/gwr/gop.php',
 	};
 	
+	startTime = new Date().getTime();
+	
 	request(opts,function(e,r,b) {
 		// Request Complete
+		//console.log(startTime);
+		//console.log(endTime);
+		//console.log(b);
+		endTime = new Date().getTime();
+		timeForRequest = (endTime - startTime)/1000;
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			error = 0;
+			// SUCCESS
+			cb(0,timeForRequest);
+		}else{
+			// ERROR
+			cb(1,timeForRequest);
+		}
 	});
 }
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
-	console.log("Turn Off Room");
+	//console.log("Turn Off Room");
 	rid = this.GetRIDByName(name);
 	
 	var RoomCommand = util.format(RoomSendCommand,rid,0);
@@ -155,8 +177,23 @@ TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
 	uri:'http://'+this._host+'/gwr/gop.php',
 	};
 	
+	startTime = new Date().getTime();
+	
 	request(opts,function(e,r,b) {
 		// Request Complete
+		endTime = new Date().getTime();
+		timeForRequest = (endTime - startTime)/1000;
+		//console.log(b);
+		//console.log(startTime);
+		//console.log(endTime);		
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			error = 0;
+			// SUCCESS
+			cb(0,timeForRequest);
+		}else{
+			// ERROR
+			cb(1,timeForRequest);
+		}
 	});
 }
 TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
