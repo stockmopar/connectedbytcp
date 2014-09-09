@@ -161,7 +161,7 @@ TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
 	this.SetRoomLevelByName(name,level,function(error,aTime){
 		self.TurnOnRoomByName(name,function(error,bTime){
 			cb(0,1);
-		}
+		});
 	});
 }
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
