@@ -14,7 +14,7 @@ if(1){
 		});
 		
 		var cfetchState = function() {
-			if(state == 1){
+			if(0){
 				Test.TurnOffRoomByName(room, function(error,timeForRequest){
 					console.log("[TOG" + j + "] " + error + " : " + timeForRequest);
 					ctotal += timeForRequest;
@@ -39,7 +39,7 @@ if(1){
 	});
 }
 
-if(1){
+if(0){
 	// NUMBER OF CYCLES
 	cycles = 100;
 	i = 0;

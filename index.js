@@ -183,9 +183,6 @@ TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
 		// Request Complete
 		endTime = new Date().getTime();
 		timeForRequest = (endTime - startTime)/1000;
-		//console.log(b);
-		//console.log(startTime);
-		//console.log(endTime);		
 		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
 			error = 0;
 			// SUCCESS
@@ -215,6 +212,7 @@ TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
 	
 	request(opts,function(e,r,b) {
 		// Request Complete
+		cb(0,timeForRequest);
 	});
 }
 
