@@ -114,14 +114,11 @@ TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 }
 TCPConnected.prototype.GetRIDByName = function (name){
 	var rid = 0;
-	//console.log(Rooms);
 	Rooms.forEach(function(room) {
-		//console.log(room);
 		if(room["name"] == name){
 			rid = room["rid"];
 		}
 	});
-	//console.log(rid);
 	return rid;
 }
 
@@ -144,24 +141,30 @@ TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
 	startTime = new Date().getTime();
 	
 	request(opts,function(e,r,b) {
-		// Request Complete
-		//console.log(startTime);
-		//console.log(endTime);
-		//console.log(b);
 		endTime = new Date().getTime();
 		timeForRequest = (endTime - startTime)/1000;
 		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
 			error = 0;
-			// SUCCESS
 			cb(0,timeForRequest);
 		}else{
-			// ERROR
 			cb(1,timeForRequest);
 		}
 	});
 }
+TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
+	var self = this;
+	rid = this.GetRIDByName(name);
+	
+	var RoomCommand = util.format(RoomSendCommand,rid,1);
+	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
+
+	this.SetRoomLevelByName(name,level,function(error,aTime){
+		self.TurnOnRoomByName(name,function(error,bTime){
+			cb(0,1);
+		}
+	});
+}
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
-	//console.log("Turn Off Room");
 	rid = this.GetRIDByName(name);
 	
 	var RoomCommand = util.format(RoomSendCommand,rid,0);
