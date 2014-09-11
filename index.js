@@ -18,7 +18,6 @@ function TCPConnected(host) {
 };
 
 TCPConnected.prototype.GetState = function (cb){
-	//var error;
 	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(GetStateString));
 	var opts = {
 	method:"POST",
@@ -34,10 +33,10 @@ TCPConnected.prototype.GetState = function (cb){
 	
 	request(opts,function(e,r,b) {
 		//console.log(b);
-		
+		if(!e){
 		xml(b, function (error, result) {
 			// Need to add validation to make sure that Rooms is proper or else result error
-			console.log("Error: '" + error + "'");
+			//console.log("Error: '" + error + "'");
 			//console.log(result);
 			//console.log(Rooms);
 			if (error) {
@@ -62,7 +61,7 @@ TCPConnected.prototype.GetState = function (cb){
 					} catch (err) {
 					var error = 1;
 				}
-				cb(error||null,Rooms,timeForRequest);
+				cb(error||null,Rooms);
 			}
 		});
 	});
