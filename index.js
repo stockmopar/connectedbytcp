@@ -18,6 +18,7 @@ function TCPConnected(host) {
 };
 
 TCPConnected.prototype.GetState = function (cb){
+	//var error;
 	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(GetStateString));
 	var opts = {
 	method:"POST",
@@ -36,29 +37,33 @@ TCPConnected.prototype.GetState = function (cb){
 		
 		xml(b, function (error, result) {
 			// Need to add validation to make sure that Rooms is proper or else result error
+			console.log(error);
 			//console.log(result);
-			
-			endTime = new Date().getTime();
-			timeForRequest = (endTime - startTime)/1000;
-			
-			if(typeof(result["gip"]) !== 'undefined'){
-				error = 1;
-			}else{
-				Rooms = result['gwrcmd']['gdata']['gip']['room'];
-				if (typeof(Rooms["rid"]) !== 'undefined'){
-					Rooms = [ Rooms ];
-				}
-			}
 			//console.log(Rooms);
 			if (error) {
-				return cb(error);
+				//console.error(error);
+				cb(1);
+				//return cb(error);
+			}else{
+				endTime = new Date().getTime();
+				timeForRequest = (endTime - startTime)/1000;
+				
+				if(typeof(result["gip"]) !== 'undefined'){
+					error = 1;
+				}else{
+					Rooms = result['gwrcmd']['gdata']['gip']['room'];
+					if (typeof(Rooms["rid"]) !== 'undefined'){
+						Rooms = [ Rooms ];
+					}
+				}
+				
+				try {
+					var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
+					} catch (err) {
+					var error = 1;
+				}
+				cb(error||null,Rooms,timeForRequest);
 			}
-			try {
-				var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
-				} catch (err) {
-				var error = {error:'Unkown Error'}
-			}
-			cb(error||null,Rooms,timeForRequest);
 		});
 	});
 }
@@ -197,7 +202,6 @@ TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
 	});
 }
 TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
-	console.log("Set Level of Room");
 	rid = this.GetRIDByName(name);
 	
 	var RoomLevelCommand = util.format(RoomSendLevelCommand,rid,level);
