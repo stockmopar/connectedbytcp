@@ -30,7 +30,7 @@ TCPConnected.prototype.GetState = function (cb){
 	};
 	
 	startTime = new Date().getTime();
-	console.log("Starting Get State");
+	console.log("Starting Get State ---");
 	
 	request(opts,function(e,r,b) {
 		//console.log(b);
