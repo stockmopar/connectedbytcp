@@ -66,8 +66,10 @@ TCPConnected.prototype.GetState = function (cb){
 					try {
 						var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
 						} catch (err) {
-						var error = 1;
-					}
+							console.log("Error identified!");
+							console.log(result);
+							var error = 1;
+						}
 					cb(error||null,Rooms);
 				}
 			});
