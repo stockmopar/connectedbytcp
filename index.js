@@ -13,7 +13,7 @@ var Rooms = [];
 
 function TCPConnected(host) {
 	EventEmitter.call(this);
-	if (!host) throw new Error("Invalid Parameters to WeMo")
+	if (!host) throw new Error("Invalid Parameters to TCP Connected")
 	this._host = host;
 };
 
@@ -127,7 +127,29 @@ TCPConnected.prototype.GetRIDByName = function (name){
 	});
 	return rid;
 }
+TCPConnected.prototype.TurnOnRoom = function (rid, cb){
+	
+	var RoomCommand = util.format(RoomSendCommand,rid,1);
+	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
 
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			cb(0);
+		}else{
+			cb(1);
+		}
+	});
+}
 TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
 	rid = this.GetRIDByName(name);
 	
@@ -157,6 +179,7 @@ TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
 		}
 	});
 }
+
 TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
 	var self = this;
 	rid = this.GetRIDByName(name);
@@ -168,6 +191,28 @@ TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
 		self.TurnOnRoomByName(name,function(error,bTime){
 			cb(0,1);
 		});
+	});
+}
+TCPConnected.prototype.TurnOffRoom = function (rid, cb){
+	var RoomCommand = util.format(RoomSendCommand,rid,0);
+	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
+
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			cb(0);
+		}else{
+			cb(1);
+		}
 	});
 }
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
@@ -200,6 +245,25 @@ TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
 			// ERROR
 			cb(1,timeForRequest);
 		}
+	});
+}
+TCPConnected.prototype.SetRoomLevel = function (rid, level, cb){	
+	var RoomLevelCommand = util.format(RoomSendLevelCommand,rid,level);
+	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomLevelCommand));
+	
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		// Request Complete
+		cb(0);
 	});
 }
 TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
