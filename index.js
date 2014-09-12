@@ -30,13 +30,16 @@ TCPConnected.prototype.GetState = function (cb){
 	};
 	
 	startTime = new Date().getTime();
+	console.log("Starting Get State");
 	
 	request(opts,function(e,r,b) {
 		//console.log(b);
+		console.log("Request Returned");
 		if(!e){
 			xml(b, function (error, result) {
+				console.log("XML Returned");
 				// Need to add validation to make sure that Rooms is proper or else result error
-				console.log("Error: '" + error + "'");
+				//console.log("Error: '" + error + "'");
 				//console.log(result);
 				//console.log(Rooms);
 				if (error) {
