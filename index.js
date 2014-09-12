@@ -34,36 +34,37 @@ TCPConnected.prototype.GetState = function (cb){
 	request(opts,function(e,r,b) {
 		//console.log(b);
 		if(!e){
-		xml(b, function (error, result) {
-			// Need to add validation to make sure that Rooms is proper or else result error
-			//console.log("Error: '" + error + "'");
-			//console.log(result);
-			//console.log(Rooms);
-			if (error) {
-				//console.error(error);
-				cb(1);
-				//return cb(error);
-			}else{
-				endTime = new Date().getTime();
-				timeForRequest = (endTime - startTime)/1000;
-				
-				if(typeof(result["gip"]) !== 'undefined'){
-					error = 1;
+			xml(b, function (error, result) {
+				// Need to add validation to make sure that Rooms is proper or else result error
+				console.log("Error: '" + error + "'");
+				//console.log(result);
+				//console.log(Rooms);
+				if (error) {
+					//console.error(error);
+					cb(1);
+					//return cb(error);
 				}else{
-					Rooms = result['gwrcmd']['gdata']['gip']['room'];
-					if (typeof(Rooms["rid"]) !== 'undefined'){
-						Rooms = [ Rooms ];
+					endTime = new Date().getTime();
+					timeForRequest = (endTime - startTime)/1000;
+					
+					if(typeof(result["gip"]) !== 'undefined'){
+						error = 1;
+					}else{
+						Rooms = result['gwrcmd']['gdata']['gip']['room'];
+						if (typeof(Rooms["rid"]) !== 'undefined'){
+							Rooms = [ Rooms ];
+						}
 					}
+					
+					try {
+						var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
+						} catch (err) {
+						var error = 1;
+					}
+					cb(error||null,Rooms);
 				}
-				
-				try {
-					var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
-					} catch (err) {
-					var error = 1;
-				}
-				cb(error||null,Rooms);
-			}
-		});
+			});
+		}
 	});
 }
 TCPConnected.prototype.GetRoomHueByName = function (name, cb){
