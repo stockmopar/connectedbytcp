@@ -34,7 +34,7 @@ TCPConnected.prototype.GetState = function (cb){
 	
 	request(opts,function(e,r,b) {
 		//console.log(b);
-		console.log("Request Returned");
+		//console.log("Request Returned");
 		if(!e){
 			xml(b, function (error, result) {
 				//console.log("XML Returned");
