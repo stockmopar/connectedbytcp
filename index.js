@@ -48,10 +48,13 @@ TCPConnected.prototype.GetState = function (cb){
 					cb(1);
 					//return cb(error);
 				}else{
+					
 					endTime = new Date().getTime();
 					timeForRequest = (endTime - startTime)/1000;
 					
 					if(typeof(result["gip"]) !== 'undefined'){
+						console.log("Error identified!");
+						console.log(result);
 						error = 1;
 					}else{
 						Rooms = result['gwrcmd']['gdata']['gip']['room'];
