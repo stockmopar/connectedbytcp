@@ -62,14 +62,6 @@ TCPConnected.prototype.GetState = function (cb){
 							Rooms = [ Rooms ];
 						}
 					}
-					
-					try {
-						var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
-						} catch (err) {
-							console.log("Error identified!");
-							console.log(result);
-							var error = 1;
-						}
 					cb(error||null,Rooms);
 				}
 			});
