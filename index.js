@@ -30,15 +30,15 @@ TCPConnected.prototype.GetState = function (cb){
 	};
 	
 	startTime = new Date().getTime();
-	console.log("Starting Get State ---");
+	//console.log("Starting Get State ---");
 	
 	request(opts,function(e,r,b) {
 		//console.log(b);
 		console.log("Request Returned");
 		if(!e){
 			xml(b, function (error, result) {
-				console.log("XML Returned");
-				console.log("Error: '" + error + "'");
+				//console.log("XML Returned");
+				//console.log("Error: '" + error + "'");
 				// Need to add validation to make sure that Rooms is proper or else result error
 				//
 				//console.log(result);
@@ -53,8 +53,8 @@ TCPConnected.prototype.GetState = function (cb){
 					timeForRequest = (endTime - startTime)/1000;
 					
 					if(typeof(result["gip"]) !== 'undefined'){
-						console.log("Error identified!");
-						console.log(result);
+						//console.log("Error identified!");
+						//console.log(result);
 						error = 1;
 					}else{
 						Rooms = result['gwrcmd']['gdata']['gip']['room'];
