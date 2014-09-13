@@ -7,8 +7,13 @@ module.exports = TCPConnected;
 
 var RequestString = 'cmd=%s&data=%s&fmt=xml';
 var GetStateString = ['<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>1234567890</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>'].join('\n');
+
 var RoomSendCommand = ['<gip><version>1</version><token>1234567890</token><rid>%s</rid><value>%s</value></gip>'].join('\n');
 var RoomSendLevelCommand = ['<gip><version>1</version><token>1234567890</token><rid>%s</rid><value>%s</value><type>level</type></gip>'].join('\n');
+
+var DeviceSendCommand = ['<gip><version>1</version><token>1234567890</token><did>%s</did><value>%s</value></gip>'].join('\n');
+var DeviceSendLevelCommand = ['<gip><version>1</version><token>1234567890</token><did>%s</did><value>%s</value><type>level</type></gip>'].join('\n');
+
 var Rooms = [];
 
 function TCPConnected(host) {
@@ -16,7 +21,71 @@ function TCPConnected(host) {
 	if (!host) throw new Error("Invalid Parameters to TCP Connected")
 	this._host = host;
 };
+TCPConnected.prototype.TurnOnDevice = function (did, cb){
+	
+	var DeviceCommand = util.format(DeviceSendCommand,did,1);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceCommand));
 
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			cb(0);
+		}else{
+			cb(1);
+		}
+	});
+}
+TCPConnected.prototype.TurnOffDevice = function (did, cb){
+	
+	var DeviceCommand = util.format(DeviceSendCommand,did,0);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceCommand));
+
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		if(e == null && b == "<gip><version>1</version><rc>200</rc></gip>"){
+			cb(0);
+		}else{
+			cb(1);
+		}
+	});
+}
+TCPConnected.prototype.SetDeviceLevel = function (did, level, cb){	
+	var DeviceLevelCommand = util.format(DeviceSendLevelCommand,did,level);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceLevelCommand));
+	
+	var opts = {
+	method:"POST",
+	body:payload,
+	headers:{
+	  'Content-Type':'text/xml; charset="utf-8"',
+	  'Content-Length':payload.length
+	},
+	uri:'http://'+this._host+'/gwr/gop.php',
+	};
+	
+	request(opts,function(e,r,b) {
+		// Request Complete
+		cb(0);
+	});
+}
 TCPConnected.prototype.GetState = function (cb){
 	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(GetStateString));
 	var opts = {
