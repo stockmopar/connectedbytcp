@@ -40,4 +40,4 @@ var updateFadeLevel = function() {
 }
 
 // run the script
-var sunrise = setInterval(updateFadeLevel, (fadeDuration * 60));
+var sunrise = setInterval(updateFadeLevel, (fadeDuration * 600));
