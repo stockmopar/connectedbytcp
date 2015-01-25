@@ -13,6 +13,8 @@ http://home.stockmopar.com
 
 http://home.stockmopar.com/connected-by-tcp-unofficial-api
 
+http://home.stockmopar.com/updated-connected-by-tcp-api/
+
 You can now install using npm package manager using the following command:
 ```sh
 npm install connectedbytcp
