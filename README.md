@@ -1,6 +1,10 @@
 Connected by TCP Node.js Control
 =================================
 
+Version 0.0.6:
+
+First release to support the new protocol with the gateway.
+
 This contains an example which will turn off and on the lights in a room based on the name of the room.
 
 For more information see:
