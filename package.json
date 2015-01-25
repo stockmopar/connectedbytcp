@@ -1,6 +1,6 @@
 {
   "name": "connectedbytcp",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": {
     "name": "stockmopar",
     "email": "git@stockmopar.com"
@@ -8,11 +8,13 @@
   "main": "connectedbytcp",
   "dependencies": {
 	"util": "*",
-	"request": "*",
+	"https": "*",
 	"libxml-to-js": "*",
-	"events": "*"
+	"events": "*",
+	"nconf": "*",
+	"node-uuid": "*"
   },
   "readmeFilename": "README.md",
-  "_id": "connectedbytcp@0.0.5",
+  "_id": "connectedbytcp@0.0.6",
   "description": "Connected by TCP client"
 }

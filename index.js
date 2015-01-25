@@ -1,58 +1,181 @@
 var util = require('util');
-var request = require('request');
+var https = require('https');
 var xml = require('libxml-to-js');
 var EventEmitter = require('events').EventEmitter;
+var nconf = require('nconf');
+var uuid = require('node-uuid');
 
 module.exports = TCPConnected;
 
 var RequestString = 'cmd=%s&data=%s&fmt=xml';
-var GetStateString = ['<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>1234567890</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>'].join('\n');
-var RoomSendCommand = ['<gip><version>1</version><token>1234567890</token><rid>%s</rid><value>%s</value></gip>'].join('\n');
-var RoomSendLevelCommand = ['<gip><version>1</version><token>1234567890</token><rid>%s</rid><value>%s</value><type>level</type></gip>'].join('\n');
+var GetStateString = ['<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>%s</token><fields>name,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>'].join('\n');
+
+var RoomSendCommand = ['<gip><version>1</version><token>%s</token><rid>%s</rid><value>%s</value></gip>'].join('\n');
+var RoomSendLevelCommand = ['<gip><version>1</version><token>%s</token><rid>%s</rid><value>%s</value><type>level</type></gip>'].join('\n');
+
+var DeviceSendCommand = ['<gip><version>1</version><token>%s</token><did>%s</did><value>%s</value></gip>'].join('\n');
+var DeviceSendLevelCommand = ['<gip><version>1</version><token>%s</token><did>%s</did><value>%s</value><type>level</type></gip>'].join('\n');
+
+var LogInCommand = ['<gip><version>1</version><email>%s</email><password>%s</password></gip>'].join('\n');
+
 var Rooms = [];
+
+// needed to keep socket variable in scope
+var tcpSocket = this;
 
 function TCPConnected(host) {
 	EventEmitter.call(this);
-	if (!host) throw new Error("Invalid Parameters to WeMo")
+	if (!host) throw new Error("Invalid Parameters to TCP Connected")
 	this._host = host;
+	this._hasToken = 0;
 };
-
-TCPConnected.prototype.GetState = function (cb){
-	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(GetStateString));
-	var opts = {
-	method:"POST",
-	body:payload,
-	headers:{
-	  'Content-Type':'text/xml; charset="utf-8"',
-	  'Content-Length':payload.length
-	},
-	uri:'http://'+this._host+'/gwr/gop.php',
+TCPConnected.prototype.Init = function(cb){
+	this.LoadToken(cb);
+}
+TCPConnected.prototype.GWEnd = function(){
+	tcpSocket.end(); 
+}
+TCPConnected.prototype.GWRequest = function(payload,cb){
+	if(!this._hasToken){
+		cb(1);
+	}else{
+		var options = {
+			hostname: this._host,
+			port: 443,
+			path: '/gwr/gop.php',
+			method: 'POST',
+			headers:{
+			  'Content-Type':'text/xml; charset="utf-8"',
+			  'Content-Length':payload.length
+			},
+			rejectUnauthorized: false,
+			agent: false
+		};
+		
+		tcpSocket = https.request(options, function(res) {
+			res.on('data', function(data){
+				cb(data);
+			});
+		});
+		
+		tcpSocket.write(payload);
+	}
+}
+TCPConnected.prototype.SyncGateway = function(cb){
+	var myuuid = uuid.v4();
+	var username = myuuid;
+	var password = myuuid;
+	
+	var gLogInCommand = util.format(LogInCommand,username,password);
+	
+	var payload = util.format(RequestString,'GWRLogin',encodeURIComponent(gLogInCommand));
+	var options = {
+		hostname: this._host,
+		port: 443,
+		path: '/gwr/gop.php',
+		method: 'POST',
+		headers:{
+		  'Content-Type':'text/xml; charset="utf-8"',
+		  'Content-Length':payload.length
+		},
+		rejectUnauthorized: false,
+		agent: false
 	};
 	
-	request(opts,function(e,r,b) {
-		console.log(b);
-		xml(b, function (error, result) {
-			// Need to add validation to make sure that Rooms is proper or else result error
-			console.log(result);
-			if(typeof(results["gip"]) !== 'undefined'){
-				error = 1;
+	tcpSocket = https.request(options, function(res) {
+		res.on('data', function(data){
+			process.stdout.write(data);
+			if(data == "<gip><version>1</version><rc>404</rc></gip>"){
+				console.log("Permission Denied: Gateway Not In Sync Mode. Press Button on Gateway to Sync.");
+				cb(1);
 			}else{
-				Rooms = result['gwrcmd']['gdata']['gip']['room'];
-				if (typeof(Rooms["rid"]) !== 'undefined'){
-					Rooms = [ Rooms ];
-				}
+				xml(data,function(error,result){	
+					if(result['token'] != undefined){
+						this._token = result['token'];
+						nconf.use('file', { file: './config.json' });
+						nconf.set('token', this._token);
+						nconf.save(function (err) {
+							if (err) {
+								console.error(err.message);
+								return;
+							}
+							console.log('Configuration saved successfully.');
+						});
+						cb(0);
+					}
+				});
 			}
-			//console.log(Rooms);
-			if (error) {
-				return cb(error);
-			}
-			try {
-				var state = result['s:Body']['u:GetBinaryStateResponse'].BinaryState
-				} catch (err) {
-				var error = {error:'Unkown Error'}
-			}
-			cb(error||null,Rooms);
 		});
+	});
+	
+	tcpSocket.write(payload);
+}
+TCPConnected.prototype.LoadToken = function(cb){
+	nconf.use('file', { file: './config.json' });
+	nconf.load();
+	if(nconf.get('token') != undefined){
+		this._token = nconf.get('token');
+		this._hasToken = 1;
+		cb(0);
+	}else{
+		console.log("No Token Saved. Attempting to Connect With Gateway to Get Token.");
+		console.log("Button On Gateway Must Be Pressed Prior to This.");
+		this.SyncGateway(cb);
+	}
+}
+TCPConnected.prototype.GetState = function (cb){
+	var StateString = util.format(GetStateString,this._token);
+	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(StateString));
+		
+	this.GWRequest(payload,function(data){
+		//process.stdout.write(data);
+		if(data == "<gip><version>1</version><rc>401</rc></gip>"){
+			console.log("Permission Denied: Invalid Token");
+		}else{
+			xml(data,function(error,result){
+				//console.log(result);
+				if (error) {
+					cb(1);
+					return;
+				}else{
+					if(typeof(result["gip"]) !== 'undefined'){
+						error = 1;
+					}else{
+						Rooms = result['gwrcmd']['gdata']['gip']['room'];
+						if (typeof(Rooms["rid"]) !== 'undefined'){
+							Rooms = [ Rooms ];
+						}
+					}
+					cb(error||null,Rooms);
+				}
+			});
+		}
+	});
+}
+TCPConnected.prototype.TurnOnDevice = function (did, cb){
+	
+	var DeviceCommand = util.format(DeviceSendCommand,this._token,did,1);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceCommand));
+
+	this.GWRequest(payload,function(data){
+		cb(0);
+	});
+}
+TCPConnected.prototype.TurnOffDevice = function (did, cb){
+	
+	var DeviceCommand = util.format(DeviceSendCommand,this._token,did,0);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceCommand));
+
+	this.GWRequest(payload,function(data){
+		cb(0);
+	});
+}
+TCPConnected.prototype.SetDeviceLevel = function (did, level, cb){	
+	var DeviceLevelCommand = util.format(DeviceSendLevelCommand,this._token,did,level);
+	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceLevelCommand));
+	
+	this.GWRequest(payload,function(data){
+		cb(0);
 	});
 }
 TCPConnected.prototype.GetRoomHueByName = function (name, cb){
@@ -107,78 +230,63 @@ TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 }
 TCPConnected.prototype.GetRIDByName = function (name){
 	var rid = 0;
-	//console.log(Rooms);
 	Rooms.forEach(function(room) {
-		//console.log(room);
 		if(room["name"] == name){
 			rid = room["rid"];
 		}
 	});
-	//console.log(rid);
 	return rid;
 }
-
-TCPConnected.prototype.TurnOnRoomByName = function (name){
-	rid = this.GetRIDByName(name);
+TCPConnected.prototype.TurnOnRoom = function (rid, cb){
 	
-	var RoomCommand = util.format(RoomSendCommand,rid,1);
+	var RoomCommand = util.format(RoomSendCommand,this._token,rid,1);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
 
-	var opts = {
-	method:"POST",
-	body:payload,
-	headers:{
-	  'Content-Type':'text/xml; charset="utf-8"',
-	  'Content-Length':payload.length
-	},
-	uri:'http://'+this._host+'/gwr/gop.php',
-	};
-	
-	request(opts,function(e,r,b) {
-		// Request Complete
+	this.GWRequest(payload,function(data){
+		cb(0);
 	});
+}
+TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
+	rid = this.GetRIDByName(name);
+	
+	this.TurnOnRoom(rid,cb);
+}
+
+TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
+	var self = this;
+	rid = this.GetRIDByName(name);
+
+	this.SetRoomLevel(rid,level,function(error){
+		self.TurnOnRoom(rid,cb);
+	});
+}
+TCPConnected.prototype.TurnOffRoom = function (rid, cb){
+	var RoomCommand = util.format(RoomSendCommand,this._token,rid,0);
+	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
+
+	this.GWRequest(payload,function(data){
+		cb(0);
+	});
+	
 }
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
-	console.log("Turn Off Room");
 	rid = this.GetRIDByName(name);
 	
-	var RoomCommand = util.format(RoomSendCommand,rid,0);
-	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
-	
-	var opts = {
-	method:"POST",
-	body:payload,
-	headers:{
-	  'Content-Type':'text/xml; charset="utf-8"',
-	  'Content-Length':payload.length
-	},
-	uri:'http://'+this._host+'/gwr/gop.php',
-	};
-	
-	request(opts,function(e,r,b) {
-		// Request Complete
-	});
+	this.TurnOffRoom(rid,cb);
 }
-TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
-	console.log("Set Level of Room");
-	rid = this.GetRIDByName(name);
-	
-	var RoomLevelCommand = util.format(RoomSendLevelCommand,rid,level);
+TCPConnected.prototype.SetRoomLevel = function (rid, level, cb){	
+	var RoomLevelCommand = util.format(RoomSendLevelCommand,this._token,rid,level);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomLevelCommand));
 	
-	var opts = {
-	method:"POST",
-	body:payload,
-	headers:{
-	  'Content-Type':'text/xml; charset="utf-8"',
-	  'Content-Length':payload.length
-	},
-	uri:'http://'+this._host+'/gwr/gop.php',
-	};
-	
-	request(opts,function(e,r,b) {
-		// Request Complete
+	this.GWRequest(payload,function(data){
+		cb(0);
 	});
+	
+}
+TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
+	rid = this.GetRIDByName(name);
+	
+	this.SetRoomLevel(rid,level,cb);
 }
 
 function rgb2hsv () {
