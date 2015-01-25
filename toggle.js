@@ -1,9 +1,9 @@
 var TCPConnected = require('./index.js');
 
-Test = new TCPConnected("192.168.1.137");
+Test = new TCPConnected("10.0.1.3");
 
 Test.GetState(function(error,system){
-	room = "Bathroom";
+	room = "Bedroom";
 	Test.GetRoomStateByName(room, function(error,state,level){
 		console.log("State: " + state + " at Level: " + level);
 	});
