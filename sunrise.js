@@ -1,43 +1,41 @@
 // requires & definitions
 var TCPConnected = require('./index.js');
 Sunrise = new TCPConnected("10.0.1.3");
-var time = new Date();
-var level = 0;
 
 //user vars
 var room = 'Bedroom';
-var fadeDuration = 30;
-
-
+var fadeDuration = 1;
+var step = 4;
+var sunrise;
 
 // script
 var updateFadeLevel = function() {
   Sunrise.GetState(function(error,system){
-    
-    // report status
-	Sunrise.GetRoomStateByName(room, function(error,state,level){
-		console.log("State: " + state + " at Level: " + level);
-	});
-    
-    // set bulb brightness
-	Sunrise.SetRoomLevelByName(room, level);
-    
-    // turn the light on if it’s switched off
-	if(state == 0){
-		Sunrise.TurnOnRoomByName(room);
-	}
-    
-    // stop incrementing if they’re all the way on...
-    if (level >= 100) {
-      console.log('Lights are all the way on.');
-      clearInterval(sunrise);
-    } else {
-      // ... or increment light level
-      level++;
-    }
-    
+  	Sunrise.GetRoomStateByName(room, function(error,state,level){
+  		if(state == 0){
+  			Sunrise.TurnOnRoomWithLevelByName(room, 1, function(){
+  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+  			});
+  		}else{
+  			if (level >= 100) {
+  			  console.log('Lights are all the way on.');
+  			  clearInterval(sunrise);
+  			  Sunrise.GWEnd();
+  			} else {
+  			  Sunrise.SetRoomLevelByName(room, Math.min(100,level+step), function(){
+  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+  			  } );
+  			}
+  		}
+  	});
   });
 }
 
 // run the script
-var sunrise = setInterval(updateFadeLevel, (fadeDuration * 600));
+Sunrise.Init(function(error){
+	if(!error){
+		sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+	}else{
+		console.log("There was an issue initializing the token");
+	}
+});
