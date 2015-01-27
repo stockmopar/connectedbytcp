@@ -1,6 +1,10 @@
 Connected by TCP Node.js Control
 =================================
 
+Version 0.0.7
+
+Removed https dependency to fix npm install error.
+
 Version 0.0.6:
 
 First release to support the new protocol with the gateway.
