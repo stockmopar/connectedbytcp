@@ -14,6 +14,6 @@
 	"node-uuid": "*"
   },
   "readmeFilename": "README.md",
-  "_id": "connectedbytcp@0.0.7",
+  "_id": "connectedbytcp@0.0.7", 
   "description": "Connected by TCP client"
 }
