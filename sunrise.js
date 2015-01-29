@@ -14,7 +14,7 @@ var updateFadeLevel = function() {
   	Sunrise.GetRoomStateByName(room, function(error,state,level){
   		if(state == 0){
   			Sunrise.TurnOnRoomWithLevelByName(room, 1, function(){
-  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 600));
+  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
   			});
   		}else{
   			if (level >= 100) {
@@ -23,7 +23,7 @@ var updateFadeLevel = function() {
   			  Sunrise.GWEnd();
   			} else {
   			  Sunrise.SetRoomLevelByName(room, Math.min(100,level+step), function(){
-  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 600));
+  				sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
   			  } );
   			}
   		}
