@@ -5,7 +5,7 @@ Sunrise = new TCPConnected("10.0.1.3");
 //user vars
 var room = 'Bedroom';
 var fadeDuration = 30;
-var step = 1;
+var step = 4;
 var sunrise;
 
 // script
