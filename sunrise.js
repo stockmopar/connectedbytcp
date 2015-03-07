@@ -5,7 +5,7 @@ var TCPConnected = require('./index.js');
 Sunrise = new TCPConnected("192.168.1.137");
 
 //user vars
-var room = 'Bedroom';
+var room = 'Living Room';
 var fadeDuration = 1;
 var step = 4;
 var sunrise;
@@ -35,7 +35,19 @@ var updateFadeLevel = function() {
 // run the script
 Sunrise.Init(function(error){
 	if(!error){
-		sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+		Sunrise.GetState(function(error,system){
+			Sunrise.GetRoomStateByName(room, function(error,state,level){
+				console.log(state);
+				if(state == 1){
+					console.log("Light is on. Turn it off first.");
+					Sunrise.TurnOffRoomByName(room, function(){
+						sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+					});
+				}else{
+					sunrise = setTimeout(updateFadeLevel, (fadeDuration * 60));
+				}
+			});
+		});
 	}else{
 		console.log("There was an issue initializing the token");
 	}
