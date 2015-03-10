@@ -1,6 +1,6 @@
 var TCPConnected = require('./index.js');
 
-Test = new TCPConnected("192.168.1.137");
+Test = new TCPConnected("10.0.1.3");
 
 Test.Init(function(error){
 	if(!error){
