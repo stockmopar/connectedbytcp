@@ -25,16 +25,16 @@ var tcpSocket = this;
 
 function TCPConnected(host) {
 	EventEmitter.call(this);
-	if (!host) throw new Error("Invalid Parameters to TCP Connected")
+	if (!host) throw new Error("Invalid Parameters to TCP Connected");
 	this._host = host;
 	this._hasToken = 0;
-};
+}
 TCPConnected.prototype.Init = function(cb){
 	this.LoadToken(cb);
 }
 TCPConnected.prototype.GWEnd = function(){
 	tcpSocket.end(); 
-}
+};
 TCPConnected.prototype.GWRequest = function(payload,cb){
 	if(!this._hasToken){
 		cb(1);
@@ -44,9 +44,9 @@ TCPConnected.prototype.GWRequest = function(payload,cb){
 			port: 443,
 			path: '/gwr/gop.php',
 			method: 'POST',
-			headers:{
-			  'Content-Type':'text/xml; charset="utf-8"',
-			  'Content-Length':payload.length
+			headers: {
+				'Content-Type': 'text/xml; charset="utf-8"',
+				'Content-Length': payload.length
 			},
 			rejectUnauthorized: false,
 			agent: false
@@ -75,8 +75,8 @@ TCPConnected.prototype.SyncGateway = function(cb){
 		path: '/gwr/gop.php',
 		method: 'POST',
 		headers:{
-		  'Content-Type':'text/xml; charset="utf-8"',
-		  'Content-Length':payload.length
+			'Content-Type':'text/xml; charset="utf-8"',
+			'Content-Length':payload.length
 		},
 		rejectUnauthorized: false,
 		agent: false
@@ -90,7 +90,7 @@ TCPConnected.prototype.SyncGateway = function(cb){
 				cb(1);
 			}else{
 				xml(data,function(error,result){	
-					if(result['token'] != undefined){
+					if(result.token != undefined){
 						this._token = result['token'];
 						nconf.use('file', { file: './config.json' });
 						nconf.set('token', this._token);
@@ -138,11 +138,11 @@ TCPConnected.prototype.GetState = function (cb){
 					cb(1);
 					return;
 				}else{
-					if(typeof(result["gip"]) !== 'undefined'){
+					if(typeof(result.gip) !== 'undefined'){
 						error = 1;
 					}else{
-						Rooms = result['gwrcmd']['gdata']['gip']['room'];
-						if (typeof(Rooms["rid"]) !== 'undefined'){
+						Rooms = result.gwrcmd.gdata.gip.room;
+						if (typeof(Rooms.rid) !== 'undefined'){
 							Rooms = [ Rooms ];
 						}
 					}
@@ -160,7 +160,7 @@ TCPConnected.prototype.TurnOnDevice = function (did, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.TurnOffDevice = function (did, cb){
 	
 	var DeviceCommand = util.format(DeviceSendCommand,this._token,did,0);
@@ -169,7 +169,7 @@ TCPConnected.prototype.TurnOffDevice = function (did, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.SetDeviceLevel = function (did, level, cb){	
 	var DeviceLevelCommand = util.format(DeviceSendLevelCommand,this._token,did,level);
 	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceLevelCommand));
@@ -177,11 +177,11 @@ TCPConnected.prototype.SetDeviceLevel = function (did, level, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.GetRoomHueByName = function (name, cb){
 	Rooms.forEach(function(room) { 
-		if(room["name"] == name){
-			var color = room["color"];
+		if(room.name == name){
+			var color = room.color;
 			
 			var r = parseInt(color.substr(0,2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
 			var g = parseInt(color.substr(2,2), 16);
@@ -197,23 +197,23 @@ TCPConnected.prototype.GetRoomHueByName = function (name, cb){
 }
 TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 	Rooms.forEach(function(room) { 
-		if(room["name"] == name){
-			state = 0;
+		if(room.name == name){
+			var state = 0;
 			var i = 0;
 			var sum = 0;
-			var devices = room["device"];
-			if (typeof(devices["did"]) !== 'undefined'){
+			var devices = room.device;
+			if (typeof(devices.did) !== 'undefined'){
 				i = i+1;
-				if(devices["state"] != "0"){
+				if(devices.state != "0"){
 					state = 1;
-					sum = sum + parseInt(devices["level"]);
+					sum = sum + parseInt(devices.level);
 				}
 			}else{
 				devices.forEach(function(device) { 
 					i = i+1;
-					if(device["state"] != "0"){
+					if(device.state != "0"){
 						state = 1;
-						sum = sum + parseInt(device["level"]);
+						sum = sum + parseInt(device.level);
 					}
 				});
 				
@@ -223,7 +223,7 @@ TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 				i = 1;
 				state = 0;
 			}
-			level = sum / i;
+			var  level = sum / i;
 			cb(null,state,level);
 		}
 	});

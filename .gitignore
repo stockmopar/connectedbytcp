@@ -1,5 +1,7 @@
 node_modules/
 config.json
+support/
+.eslintrc.json
 
 #################
 ## Eclipse
