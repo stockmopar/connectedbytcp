@@ -289,7 +289,7 @@ TCPConnected.prototype.SetDeviceLevel = function(did, level, cb) {
   );
   var payload = util.format(
     RequestString,
-    "DeviceSendCommand",
+    "DeviceSendLevelCommand",
     encodeURIComponent(DeviceLevelCommand)
   );
   //console.log("DeviceLevelCommand: " + DeviceLevelCommand);
