@@ -3,6 +3,28 @@ Connected by TCP Node.js Control
  
 [![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NKVWX2AJRLDT2)
 
+Version 0.0.8
+
+Small changes to pass ESLint recommended
+Added alternate version of index.js (index-alt.js) with additional functionality:
+
+* GetDeviceState
+* GetDeviceStateByName
+* GetDIDByName
+* TurnOnDeviceByName
+* TurnOffDeviceByName
+* SetDeviceLevelByName
+* TurnOnDeviceWithLevel
+* TurnOnDeviceWithLevelByName
+* GetRoomState
+* TurnOnRoomWithLevel
+* ReturnRoomsArray
+
+Added OutputIDs.js which allows you to query the gateway for light and group and room ids
+Added LightControl.js which allows you to send Light commands
+Added RoomControl.js which allows you to send Room commands
+Added SceneControl.js which allows you to send Scene commands
+
 Version 0.0.7
 
 Removed https dependency to fix npm install error.

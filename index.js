@@ -25,16 +25,16 @@ var tcpSocket = this;
 
 function TCPConnected(host) {
 	EventEmitter.call(this);
-	if (!host) throw new Error("Invalid Parameters to TCP Connected")
+	if (!host) throw new Error("Invalid Parameters to TCP Connected");
 	this._host = host;
 	this._hasToken = 0;
-};
+}
 TCPConnected.prototype.Init = function(cb){
 	this.LoadToken(cb);
-}
+};
 TCPConnected.prototype.GWEnd = function(){
 	tcpSocket.end(); 
-}
+};
 TCPConnected.prototype.GWRequest = function(payload,cb){
 	if(!this._hasToken){
 		cb(1);
@@ -44,9 +44,9 @@ TCPConnected.prototype.GWRequest = function(payload,cb){
 			port: 443,
 			path: '/gwr/gop.php',
 			method: 'POST',
-			headers:{
-			  'Content-Type':'text/xml; charset="utf-8"',
-			  'Content-Length':payload.length
+			headers: {
+				'Content-Type': 'text/xml; charset="utf-8"',
+				'Content-Length': payload.length
 			},
 			rejectUnauthorized: false,
 			agent: false
@@ -60,7 +60,7 @@ TCPConnected.prototype.GWRequest = function(payload,cb){
 		
 		tcpSocket.write(payload);
 	}
-}
+};
 TCPConnected.prototype.SyncGateway = function(cb){
 	var myuuid = uuid.v4();
 	var username = myuuid;
@@ -75,8 +75,8 @@ TCPConnected.prototype.SyncGateway = function(cb){
 		path: '/gwr/gop.php',
 		method: 'POST',
 		headers:{
-		  'Content-Type':'text/xml; charset="utf-8"',
-		  'Content-Length':payload.length
+			'Content-Type':'text/xml; charset="utf-8"',
+			'Content-Length':payload.length
 		},
 		rejectUnauthorized: false,
 		agent: false
@@ -90,8 +90,8 @@ TCPConnected.prototype.SyncGateway = function(cb){
 				cb(1);
 			}else{
 				xml(data,function(error,result){	
-					if(result['token'] != undefined){
-						this._token = result['token'];
+					if(result.token != undefined){
+						this._token = result.token;
 						nconf.use('file', { file: './config.json' });
 						nconf.set('token', this._token);
 						nconf.save(function (err) {
@@ -109,7 +109,7 @@ TCPConnected.prototype.SyncGateway = function(cb){
 	});
 	
 	tcpSocket.write(payload);
-}
+};
 TCPConnected.prototype.LoadToken = function(cb){
 	nconf.use('file', { file: './config.json' });
 	nconf.load();
@@ -122,7 +122,7 @@ TCPConnected.prototype.LoadToken = function(cb){
 		console.log("Button On Gateway Must Be Pressed Prior to This.");
 		this.SyncGateway(cb);
 	}
-}
+};
 TCPConnected.prototype.GetState = function (cb){
 	var StateString = util.format(GetStateString,this._token);
 	var payload = util.format(RequestString,'GWRBatch',encodeURIComponent(StateString));
@@ -138,11 +138,11 @@ TCPConnected.prototype.GetState = function (cb){
 					cb(1);
 					return;
 				}else{
-					if(typeof(result["gip"]) !== 'undefined'){
+					if(typeof(result.gip) !== 'undefined'){
 						error = 1;
 					}else{
-						Rooms = result['gwrcmd']['gdata']['gip']['room'];
-						if (typeof(Rooms["rid"]) !== 'undefined'){
+						Rooms = result.gwrcmd.gdata.gip.room;
+						if (typeof(Rooms.rid) !== 'undefined'){
 							Rooms = [ Rooms ];
 						}
 					}
@@ -151,7 +151,7 @@ TCPConnected.prototype.GetState = function (cb){
 			});
 		}
 	});
-}
+};
 TCPConnected.prototype.TurnOnDevice = function (did, cb){
 	
 	var DeviceCommand = util.format(DeviceSendCommand,this._token,did,1);
@@ -160,7 +160,7 @@ TCPConnected.prototype.TurnOnDevice = function (did, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.TurnOffDevice = function (did, cb){
 	
 	var DeviceCommand = util.format(DeviceSendCommand,this._token,did,0);
@@ -169,19 +169,19 @@ TCPConnected.prototype.TurnOffDevice = function (did, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.SetDeviceLevel = function (did, level, cb){	
 	var DeviceLevelCommand = util.format(DeviceSendLevelCommand,this._token,did,level);
-	var payload = util.format(RequestString,'DeviceSendCommand',encodeURIComponent(DeviceLevelCommand));
+	var payload = util.format(RequestString,'DeviceSendLevelCommand',encodeURIComponent(DeviceLevelCommand));
 	
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.GetRoomHueByName = function (name, cb){
 	Rooms.forEach(function(room) { 
-		if(room["name"] == name){
-			var color = room["color"];
+		if(room.name == name){
+			var color = room.color;
 			
 			var r = parseInt(color.substr(0,2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
 			var g = parseInt(color.substr(2,2), 16);
@@ -189,31 +189,31 @@ TCPConnected.prototype.GetRoomHueByName = function (name, cb){
 			
 			console.log(r + "." + g + "." + b);
 			
-			var hue = parseInt(rgb2hsv(r, g, b)["h"] * 182);
+			var hue = parseInt(rgb2hsv(r, g, b).h * 182);
 			
 			cb(null,hue);
 		}
 	});
-}
+};
 TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 	Rooms.forEach(function(room) { 
-		if(room["name"] == name){
-			state = 0;
+		if(room.name == name){
+			var state = 0;
 			var i = 0;
 			var sum = 0;
-			var devices = room["device"];
-			if (typeof(devices["did"]) !== 'undefined'){
+			var devices = room.device;
+			if (typeof(devices.did) !== 'undefined'){
 				i = i+1;
-				if(devices["state"] != "0"){
+				if(devices.state != "0"){
 					state = 1;
-					sum = sum + parseInt(devices["level"]);
+					sum = sum + parseInt(devices.level);
 				}
 			}else{
 				devices.forEach(function(device) { 
 					i = i+1;
-					if(device["state"] != "0"){
+					if(device.state != "0"){
 						state = 1;
-						sum = sum + parseInt(device["level"]);
+						sum = sum + parseInt(device.level);
 					}
 				});
 				
@@ -223,20 +223,20 @@ TCPConnected.prototype.GetRoomStateByName = function (name, cb){
 				i = 1;
 				state = 0;
 			}
-			level = sum / i;
+			var  level = sum / i;
 			cb(null,state,level);
 		}
 	});
-}
+};
 TCPConnected.prototype.GetRIDByName = function (name){
 	var rid = 0;
 	Rooms.forEach(function(room) {
-		if(room["name"] == name){
-			rid = room["rid"];
+		if(room.name == name){
+			rid = room.rid;
 		}
 	});
 	return rid;
-}
+};
 TCPConnected.prototype.TurnOnRoom = function (rid, cb){
 	
 	var RoomCommand = util.format(RoomSendCommand,this._token,rid,1);
@@ -245,21 +245,21 @@ TCPConnected.prototype.TurnOnRoom = function (rid, cb){
 	this.GWRequest(payload,function(data){
 		cb(0);
 	});
-}
+};
 TCPConnected.prototype.TurnOnRoomByName = function (name, cb){
-	rid = this.GetRIDByName(name);
+	var rid = this.GetRIDByName(name);
 	
 	this.TurnOnRoom(rid,cb);
-}
+};
 
 TCPConnected.prototype.TurnOnRoomWithLevelByName = function (name,level, cb){
 	var self = this;
-	rid = this.GetRIDByName(name);
+	var rid = this.GetRIDByName(name);
 
 	this.SetRoomLevel(rid,level,function(error){
 		self.TurnOnRoom(rid,cb);
 	});
-}
+};
 TCPConnected.prototype.TurnOffRoom = function (rid, cb){
 	var RoomCommand = util.format(RoomSendCommand,this._token,rid,0);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomCommand));
@@ -268,12 +268,12 @@ TCPConnected.prototype.TurnOffRoom = function (rid, cb){
 		cb(0);
 	});
 	
-}
+};
 TCPConnected.prototype.TurnOffRoomByName = function (name, cb){
-	rid = this.GetRIDByName(name);
+	var rid = this.GetRIDByName(name);
 	
 	this.TurnOffRoom(rid,cb);
-}
+};
 TCPConnected.prototype.SetRoomLevel = function (rid, level, cb){	
 	var RoomLevelCommand = util.format(RoomSendLevelCommand,this._token,rid,level);
 	var payload = util.format(RequestString,'RoomSendCommand',encodeURIComponent(RoomLevelCommand));
@@ -282,12 +282,12 @@ TCPConnected.prototype.SetRoomLevel = function (rid, level, cb){
 		cb(0);
 	});
 	
-}
+};
 TCPConnected.prototype.SetRoomLevelByName = function (name, level, cb){
-	rid = this.GetRIDByName(name);
+	var rid = this.GetRIDByName(name);
 	
 	this.SetRoomLevel(rid,level,cb);
-}
+};
 
 function rgb2hsv () {
     var rr, gg, bb,
